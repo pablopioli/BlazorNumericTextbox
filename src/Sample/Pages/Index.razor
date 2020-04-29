@@ -1,0 +1,34 @@
+﻿@page "/"
+
+<div class="container-fluid">
+    <p>
+        Numeric
+    </p>
+    <p>
+        <NumericTextBox @bind-Value="Numeric" Format="###,##0.00" Style="max-width:20em;"></NumericTextBox>
+    </p>
+    <p>
+        Money
+    </p>
+    <p>
+        <NumericTextBox @bind-value="Money" Format="C4" Style="max-width:20em;" ConditionalFormatting="FormatMoney"></NumericTextBox>
+    </p>
+    <p>
+        Numeric: @Numeric
+    </p>
+    <p>
+        Money: @Money
+    </p>
+</div>
+
+@code
+{
+    decimal Numeric;
+    decimal Money = 1340.77m;
+
+    string FormatMoney(decimal value)
+    {
+        // Class to add to the tag
+        return value < 0 ? "text-danger" : "";
+    }
+}
