@@ -4,5 +4,11 @@
     "inputFiles": [
       "NumericTextBox.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/numerictextbox.min.js",
+    "inputFiles": [
+      "wwwroot/numerictextbox.js"
+    ]
   }
 ]

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BlazorNumericTextBox
@@ -11,22 +13,27 @@ namespace BlazorNumericTextBox
         public static class Defaults
         {
             public static bool UseEnterAsTab { get; set; }
-            public static string Class { get; set; } = "form-control";
+            public static bool SelectOnEntry { get; set; }
             public static int MaxLength { get; set; } = 12;
-            public static string DecimalSeparator { get; set; } = ".";
+            public static CultureInfo Culture { get; set; } = new CultureInfo("en-US");
         }
 
         [Inject] IJSRuntime JsRuntime { get; set; }
         [Parameter] public string Id { get; set; }
-        [Parameter] public string Class { get; set; } = Defaults.Class;
+        [Parameter] public string BaseClass { get; set; } = "form-control";
+        [Parameter] public string Class { get; set; }
         [Parameter] public string Style { get; set; } = "";
         [Parameter] public int MaxLength { get; set; } = Defaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
         [Parameter] public decimal Value { get; set; } = 0;
-        [Parameter] public string DecimalSeparator { get; set; } = Defaults.DecimalSeparator;
         [Parameter] public bool UseEnterAsTab { get; set; } = Defaults.UseEnterAsTab;
+        [Parameter] public bool SelectOnEntry { get; set; } = Defaults.SelectOnEntry;
+        [Parameter] public CultureInfo Culture { get; set; }
         [Parameter] public Func<decimal, string> ConditionalFormatting { get; set; }
         [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+        [Parameter] public EventCallback<decimal> NumberChanged { get; set; }
+
+        private readonly string DecimalSeparator;
 
         private string VisibleValue = "";
         private string ActiveClass = "";
@@ -38,19 +45,49 @@ namespace BlazorNumericTextBox
             const string chars = "abcdefghijklmnopqrstuvwxyz";
             Id = new string(Enumerable.Repeat(chars, 12).Select(s => s[Random.Next(s.Length)]).ToArray());
 
-            ActiveClass = Class;
+            ActiveClass = ComputeClass();
+
+            if (Culture == null)
+            {
+                if (CultureInfo.DefaultThreadCurrentUICulture != null)
+                {
+                    Culture = CultureInfo.DefaultThreadCurrentUICulture;
+                }
+                else
+                {
+                    Culture = Defaults.Culture;
+                }
+            }
+
+            DecimalSeparator = Culture.NumberFormat.NumberDecimalSeparator;
         }
 
-        protected override void OnParametersSet()
+        private async Task SetVisibleValue(decimal value)
         {
             if (string.IsNullOrEmpty(Format))
             {
-                VisibleValue = Value.ToString();
+                VisibleValue = value.ToString();
             }
             else
             {
-                VisibleValue = Value.ToString(Format);
+                VisibleValue = value.ToString(Format);
             }
+
+            var additionalFormatting = string.Empty;
+            if (ConditionalFormatting != null)
+            {
+                additionalFormatting = ConditionalFormatting(value);
+            }
+
+            var prevClass = ActiveClass;
+            ActiveClass = ComputeClass(additionalFormatting);
+
+            if (prevClass != ActiveClass)
+            {
+                StateHasChanged();
+            }
+
+            await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -69,16 +106,25 @@ namespace BlazorNumericTextBox
                         ".",
                         toDecimalSeparator,
                         UseEnterAsTab ? "true" : "",
+                        SelectOnEntry ? "true" : "",
                         MaxLength.ToString()
                     });
 
+                await SetVisibleValue(Value);
                 await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
             }
         }
 
-        private void HasGotFocus()
+        private decimal _previousValue;
+        private async Task HasGotFocus()
         {
-            ActiveClass = Class;
+            _previousValue = Value;
+            ActiveClass = ComputeClass();
+
+            if (Value == 0)
+            {
+                await JsRuntime.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
+            }
         }
 
         private async Task HasLostFocus()
@@ -89,8 +135,7 @@ namespace BlazorNumericTextBox
                 data.Replace("(", "-").Where(x => char.IsDigit(x) ||
                                              x == '-' ||
                                              x.ToString() == DecimalSeparator).ToArray());
-
-            var parsed = decimal.TryParse(cleaned, out var valueAsDecimal);
+            var parsed = decimal.TryParse(cleaned, NumberStyles.Any, Culture.NumberFormat, out var valueAsDecimal);
             if (!parsed)
             {
                 if (string.IsNullOrEmpty(Format))
@@ -121,7 +166,7 @@ namespace BlazorNumericTextBox
                                         x == '-' ||
                                         x.ToString() == DecimalSeparator).ToArray());
 
-            parsed = decimal.TryParse(cleaned, out var roundedValue);
+            parsed = decimal.TryParse(cleaned, NumberStyles.Any, Culture.NumberFormat, out var roundedValue);
 
             if (parsed)
             {
@@ -132,17 +177,40 @@ namespace BlazorNumericTextBox
                 Value = valueAsDecimal;
             }
 
-            if (ConditionalFormatting == null)
+            await SetVisibleValue(Value);
+
+            await ValueChanged.InvokeAsync(Value);
+
+            if (_previousValue != Value)
             {
-                ActiveClass = Class;
+                await NumberChanged.InvokeAsync(Value);
             }
-            else
+        }
+
+        private string ComputeClass(string additionalFormatting = "")
+        {
+            var cssClass = new StringBuilder();
+
+            cssClass.Append(BaseClass);
+
+            if (!string.IsNullOrEmpty(Class))
             {
-                ActiveClass = Class + " " + ConditionalFormatting(Value);
+                cssClass.Append(' ').Append(Class);
             }
 
-            await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
-            await ValueChanged.InvokeAsync(Value);
+            if (!string.IsNullOrEmpty(additionalFormatting))
+            {
+                cssClass.Append(' ').Append(additionalFormatting);
+            }
+
+            return cssClass.ToString();
+        }
+
+        public async Task SetValue(decimal value)
+        {
+            await SetVisibleValue(value);
+            await ValueChanged.InvokeAsync(value);
+            await NumberChanged.InvokeAsync(value);
         }
     }
 }

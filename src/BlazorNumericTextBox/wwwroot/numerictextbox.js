@@ -6,8 +6,42 @@ window.SetNumericTextBoxValue = (element, value) => {
     document.querySelector(element).innerHTML = value;
 }
 
-window.ConfigureNumericTextBox = (element, source, to, useEnterAsTab, maxLengthAsString) => {
+window.SelectNumericTextBoxContents = (id) => {
+    var cell = document.querySelector(id);
+    var range, selection;
+    if (document.body.createTextRange) {
+        range = document.body.createTextRange();
+        range.moveToElementText(cell);
+        range.select();
+    } else if (window.getSelection) {
+        selection = window.getSelection();
+        range = document.createRange();
+        range.selectNodeContents(cell);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+}
+
+window.ConfigureNumericTextBox = (element, source, to, useEnterAsTab, selectOnEntry, maxLengthAsString) => {
     var maxLength = parseInt(maxLengthAsString);
+
+    if (selectOnEntry) {
+        $(element).on('focus', function () {
+            var cell = this;
+            var range, selection;
+            if (document.body.createTextRange) {
+                range = document.body.createTextRange();
+                range.moveToElementText(cell);
+                range.select();
+            } else if (window.getSelection) {
+                selection = window.getSelection();
+                range = document.createRange();
+                range.selectNodeContents(cell);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        });
+    }
 
     document.querySelector(element).addEventListener("keypress", function (e) {
         if (e.key == "Enter") {

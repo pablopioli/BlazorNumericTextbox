@@ -5,13 +5,22 @@
         Numeric
     </p>
     <p>
-        <NumericTextBox @bind-Value="Numeric" Format="###,##0.00" Style="max-width:20em;"></NumericTextBox>
+        <NumericTextBox @bind-Value="Numeric" Format="###,##0.00"
+                        Style="max-width:20em;"
+                        NumberChanged="NumericHasChanged"
+                        @ref="NumericRef"></NumericTextBox>
     </p>
     <p>
         Money
     </p>
     <p>
-        <NumericTextBox @bind-value="Money" Format="C4" Style="max-width:20em;" ConditionalFormatting="FormatMoney"></NumericTextBox>
+        <NumericTextBox @bind-value="Money" Format="C4"
+                        Style="max-width:20em;" @ref="MoneyRef"
+                        ConditionalFormatting="FormatMoney"
+                        SelectOnEntry="true"></NumericTextBox>
+    </p>
+    <p>
+        <button class="btn btn-primary" @onclick="SetValue">Asignar valor</button>
     </p>
     <p>
         Numeric: @Numeric
@@ -19,16 +28,34 @@
     <p>
         Money: @Money
     </p>
+    <p>
+        @((MarkupString)TimesChanged)
+    </p>
 </div>
 
 @code
 {
     decimal Numeric;
-    decimal Money = 1340.77m;
+    decimal Money = -1340.77m;
+    string TimesChanged = "";
+
+    BlazorNumericTextBox.NumericTextBox NumericRef;
+    BlazorNumericTextBox.NumericTextBox MoneyRef;
 
     string FormatMoney(decimal value)
     {
         // Class to add to the tag
         return value < 0 ? "text-danger" : "";
+    }
+
+    void NumericHasChanged()
+    {
+        TimesChanged += "<p>Changed on " + DateTime.Now + "</p>";
+    }
+
+    async Task SetValue()
+    {
+        await NumericRef.SetValue(128.30m);
+        await MoneyRef.SetValue(-1.0001m);
     }
 }
