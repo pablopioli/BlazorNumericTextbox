@@ -37,10 +37,13 @@ namespace BlazorNumericTextBox
         [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
         [Parameter] public EventCallback<decimal> NumberChanged { get; set; }
 
+        private const string AlignToRight = "text-align:right;";
         private readonly string DecimalSeparator;
 
         private string VisibleValue = "";
         private string ActiveClass = "";
+        private string ComputedStyle => AdditionalStyles + Style;
+        private string AdditionalStyles = "";
 
         private static Random Random = new Random();
 
@@ -50,6 +53,7 @@ namespace BlazorNumericTextBox
             Id = new string(Enumerable.Repeat(chars, 12).Select(s => s[Random.Next(s.Length)]).ToArray());
 
             ActiveClass = ComputeClass();
+            AdditionalStyles = AlignToRight;
 
             if (Culture == null)
             {
@@ -138,6 +142,7 @@ namespace BlazorNumericTextBox
         {
             ValueBeforeFocus = Value;
             ActiveClass = ComputeClass();
+            AdditionalStyles = "";
 
             if (Value == 0)
             {
@@ -203,6 +208,8 @@ namespace BlazorNumericTextBox
             {
                 await NumberChanged.InvokeAsync(Value);
             }
+
+            AdditionalStyles = AlignToRight;
         }
 
         private string ComputeClass(string additionalFormatting = "")
