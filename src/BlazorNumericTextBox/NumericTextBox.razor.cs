@@ -25,7 +25,11 @@ namespace BlazorNumericTextBox
         [Parameter] public string Style { get; set; } = "";
         [Parameter] public int MaxLength { get; set; } = Defaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
+
+        [Parameter] public decimal PreviousValue { get; set; } = 0;
+        [Parameter] public decimal ValueBeforeFocus { get; set; } = 0;
         [Parameter] public decimal Value { get; set; } = 0;
+
         [Parameter] public bool UseEnterAsTab { get; set; } = Defaults.UseEnterAsTab;
         [Parameter] public bool SelectOnEntry { get; set; } = Defaults.SelectOnEntry;
         [Parameter] public CultureInfo Culture { get; set; }
@@ -92,6 +96,8 @@ namespace BlazorNumericTextBox
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            bool needUpdating;
+
             if (firstRender)
             {
                 string toDecimalSeparator = "";
@@ -112,13 +118,25 @@ namespace BlazorNumericTextBox
 
                 await SetVisibleValue(Value);
                 await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+
+                needUpdating = true;
+            }
+            else
+            {
+                needUpdating = PreviousValue != Value;
+            }
+
+            if (needUpdating)
+            {
+                await SetVisibleValue(Value);
+                await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                PreviousValue = Value;
             }
         }
 
-        private decimal _previousValue;
         private async Task HasGotFocus()
         {
-            _previousValue = Value;
+            ValueBeforeFocus = Value;
             ActiveClass = ComputeClass();
 
             if (Value == 0)
@@ -181,7 +199,7 @@ namespace BlazorNumericTextBox
 
             await ValueChanged.InvokeAsync(Value);
 
-            if (_previousValue != Value)
+            if (ValueBeforeFocus != Value)
             {
                 await NumberChanged.InvokeAsync(Value);
             }
@@ -208,9 +226,9 @@ namespace BlazorNumericTextBox
 
         public async Task SetValue(decimal value)
         {
+            Value = value;
+            PreviousValue = value;
             await SetVisibleValue(value);
-            await ValueChanged.InvokeAsync(value);
-            await NumberChanged.InvokeAsync(value);
         }
     }
 }
