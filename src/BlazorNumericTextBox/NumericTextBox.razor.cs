@@ -20,7 +20,7 @@ namespace BlazorNumericTextBox
 
         [Inject] IJSRuntime JsRuntime { get; set; }
         [Parameter] public string Id { get; set; }
-        [Parameter] public string BaseClass { get; set; } = "form-control";
+        [Parameter] public string BaseClass { get; set; } = "form-control overflow-hidden";
         [Parameter] public string Class { get; set; }
         [Parameter] public string Style { get; set; } = "";
         [Parameter] public int MaxLength { get; set; } = Defaults.MaxLength;
