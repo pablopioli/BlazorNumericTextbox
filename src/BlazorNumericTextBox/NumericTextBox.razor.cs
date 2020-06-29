@@ -144,6 +144,9 @@ namespace BlazorNumericTextBox
             ActiveClass = ComputeClass();
             AdditionalStyles = "";
 
+            var value = Value.ToString("G29", Culture.NumberFormat);
+            await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
+
             if (Value == 0)
             {
                 await JsRuntime.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
