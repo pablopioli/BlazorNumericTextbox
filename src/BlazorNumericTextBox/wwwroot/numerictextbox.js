@@ -63,7 +63,10 @@ window.ConfigureNumericTextBox = (element, source, to, useEnterAsTab, selectOnEn
         if (to !== "") {
             var transformedChar = transformTypedCharacter(e.key, source, to);
             if (transformedChar != e.key) {
-                insertTextAtCursor(transformedChar);
+                if (document.querySelector(element).innerHTML.length !== maxLength) {
+                    insertTextAtCursor(transformedChar);
+                }
+
                 e.preventDefault();
                 return false;
             }

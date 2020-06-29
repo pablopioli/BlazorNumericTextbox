@@ -13,18 +13,24 @@
         Numeric (not binded)
     </p>
     <p>
-        <NumericTextBox Format="###,##0.00"
+        <DecimalTextBox Format="###,##0.00"
                         Style="max-width:15rem;"
-                        @ref="NumericRef"></NumericTextBox>
+                        @ref="NumericRef"></DecimalTextBox>
     </p>
     <p>
         Money
     </p>
     <p>
-        <NumericTextBox @bind-value="Money" Format="C4"
+        <NumericTextBox @bind-value="Money" Format="C4" TItem="decimal"
                         Style="max-width:15rem;"
                         ConditionalFormatting="FormatMoney"
                         SelectOnEntry="true"></NumericTextBox>
+    </p>
+    <p>
+        Integer
+    </p>
+    <p>
+        <IntegerTextBox @bind-Value="Integer" Style="max-width:15rem;"></IntegerTextBox>
     </p>
     <p>
         <button class="btn btn-primary" @onclick="SetValueRef">Set value by reference</button>
@@ -47,9 +53,11 @@
 {
     decimal Numeric { get; set; }
     decimal Money { get; set; } = -1340.77m;
+    int Integer { get; set; }
+
     string TimesChanged = "";
 
-    BlazorNumericTextBox.NumericTextBox NumericRef;
+    BlazorNumericTextBox.NumericTextBox<decimal> NumericRef;
 
     string FormatMoney(decimal value)
     {
@@ -59,7 +67,7 @@
 
     void NumericHasChanged()
     {
-        TimesChanged += "<p>Changed on " + DateTime.Now + "</p>";
+        TimesChanged += "<p>Changed on " + DateTime.Now + " to " + Numeric + "</p>";
     }
 
     async Task SetValueRef()

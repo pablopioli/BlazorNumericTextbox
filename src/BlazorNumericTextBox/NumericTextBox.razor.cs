@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BlazorNumericTextBox
 {
-    public partial class NumericTextBox : ComponentBase
+    public partial class NumericTextBox<TItem> : ComponentBase
     {
         public static class Defaults
         {
@@ -26,16 +26,16 @@ namespace BlazorNumericTextBox
         [Parameter] public int MaxLength { get; set; } = Defaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
 
-        [Parameter] public decimal PreviousValue { get; set; } = 0;
-        [Parameter] public decimal ValueBeforeFocus { get; set; } = 0;
-        [Parameter] public decimal Value { get; set; } = 0;
+        [Parameter] public TItem PreviousValue { get; set; } = default(TItem);
+        [Parameter] public TItem ValueBeforeFocus { get; set; } = default(TItem);
+        [Parameter] public TItem Value { get; set; } = default(TItem);
 
         [Parameter] public bool UseEnterAsTab { get; set; } = Defaults.UseEnterAsTab;
         [Parameter] public bool SelectOnEntry { get; set; } = Defaults.SelectOnEntry;
         [Parameter] public CultureInfo Culture { get; set; }
-        [Parameter] public Func<decimal, string> ConditionalFormatting { get; set; }
-        [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
-        [Parameter] public EventCallback<decimal> NumberChanged { get; set; }
+        [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
+        [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
+        [Parameter] public EventCallback NumberChanged { get; set; }
 
         private const string AlignToRight = "text-align:right;";
         private readonly string DecimalSeparator;
@@ -70,7 +70,7 @@ namespace BlazorNumericTextBox
             DecimalSeparator = Culture.NumberFormat.NumberDecimalSeparator;
         }
 
-        private async Task SetVisibleValue(decimal value)
+        private async Task SetVisibleValue(TItem value)
         {
             if (string.IsNullOrEmpty(Format))
             {
@@ -78,7 +78,7 @@ namespace BlazorNumericTextBox
             }
             else
             {
-                VisibleValue = value.ToString(Format);
+                VisibleValue = Convert.ToDecimal(value).ToString(Format);
             }
 
             var additionalFormatting = string.Empty;
@@ -127,7 +127,7 @@ namespace BlazorNumericTextBox
             }
             else
             {
-                needUpdating = PreviousValue != Value;
+                needUpdating = !PreviousValue.Equals(Value);
             }
 
             if (needUpdating)
@@ -144,10 +144,11 @@ namespace BlazorNumericTextBox
             ActiveClass = ComputeClass();
             AdditionalStyles = "";
 
-            var value = Value.ToString("G29", Culture.NumberFormat);
+            decimal decValue = Convert.ToDecimal(Value);
+            var value = decValue.ToString("G29", Culture.NumberFormat);
             await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
 
-            if (Value == 0)
+            if (decValue == 0)
             {
                 await JsRuntime.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
             }
@@ -196,18 +197,18 @@ namespace BlazorNumericTextBox
 
             if (parsed)
             {
-                Value = roundedValue;
+                Value = (TItem)Convert.ChangeType(roundedValue, typeof(TItem));
             }
             else
             {
-                Value = valueAsDecimal;
+                Value = (TItem)Convert.ChangeType(valueAsDecimal, typeof(TItem));
             }
 
             await SetVisibleValue(Value);
 
             await ValueChanged.InvokeAsync(Value);
 
-            if (ValueBeforeFocus != Value)
+            if (!ValueBeforeFocus.Equals(Value))
             {
                 await NumberChanged.InvokeAsync(Value);
             }
@@ -234,7 +235,7 @@ namespace BlazorNumericTextBox
             return cssClass.ToString();
         }
 
-        public async Task SetValue(decimal value)
+        public async Task SetValue(TItem value)
         {
             Value = value;
             PreviousValue = value;
