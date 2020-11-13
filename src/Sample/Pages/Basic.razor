@@ -1,0 +1,28 @@
+﻿@page "/basic"
+
+    <div class="container-fluid my-3">
+        <h1>
+            Basic sample
+        </h1>
+        <p>
+            Integer
+        </p>
+        <p>
+            <IntegerTextBox Style="max-width:15rem;"></IntegerTextBox>
+        </p>
+        <p>
+            Formatted with two decimals
+        </p>
+        <p>
+            <DecimalTextBox Format="###,##0.00" Style="max-width:15rem;"></DecimalTextBox>
+        </p>
+        <p>
+            Generic version
+        </p>
+        <p>
+            <NumericTextBox TItem="decimal" Format="###,##0.00" Style="max-width:15rem;"></NumericTextBox>
+        </p>
+    </div>
+
+@code
+{ }

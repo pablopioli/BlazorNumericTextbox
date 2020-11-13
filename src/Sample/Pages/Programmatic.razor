@@ -1,0 +1,37 @@
+﻿@page "/programmatic"
+
+    <div class="container-fluid my-3">
+        <h1>
+            Programmatic change
+        </h1>
+        <p>
+            Integer
+        </p>
+        <p>
+            <IntegerTextBox Style="max-width:15rem;" @ref="Input1"></IntegerTextBox>
+        </p>
+        <p>
+            Formatted with two decimals
+        </p>
+        <p>
+            <DecimalTextBox Format="###,##0.00" Style="max-width:15rem;" @bind-Value="Money"></DecimalTextBox>
+        </p>
+        <p>
+            <button class="btn btn-primary" @onclick="SetValues">Set values</button>
+        </p>
+    </div>
+
+@code
+{ 
+    IntegerTextBox Input1;
+    decimal Money { get; set; } = -1340.77m;
+
+    async Task SetValues()
+    {
+        // Set value using an element reference
+        await Input1.SetValue(450);
+
+        // Set value using a binded value
+        Money = (new Random()).Next(1, 10000);
+    }
+}

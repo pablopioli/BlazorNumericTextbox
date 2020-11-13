@@ -1,0 +1,31 @@
+﻿@page "/validation"
+
+<div class="container-fluid my-3">
+    <h1>
+        Validation support
+    </h1>
+
+    <EditForm Model="Model" OnSubmit="@FormSubmitted">
+        <PeterLeslieMorris.Blazor.Validation.Validate />
+
+        <p>Age</p>
+        <p>
+            <IntegerTextBox @bind-Value="Model.Age" Style="max-width:10rem;"></IntegerTextBox>
+            <ValidationMessage For="() => Model.Age" />
+        </p>
+
+        <p>Name</p>
+        <p>
+            <InputText @bind-Value="Model.Name" class="form-control"></InputText>
+            <ValidationMessage For="() => Model.Name" />
+        </p>
+
+        <p>
+            <ValidationSummary></ValidationSummary>
+            <input type="submit" class="btn btn-primary" value="Save" />
+        </p>
+    </EditForm>
+
+    <p>Model value: @Model.Age</p>
+    <p>Validation Result: @ValidationResult</p>
+</div>

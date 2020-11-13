@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,7 +20,9 @@ namespace BlazorNumericTextBox
             public static CultureInfo Culture { get; set; } = new CultureInfo("en-US");
         }
 
+        [CascadingParameter] EditContext EditContext { get; set; } = default;
         [Inject] IJSRuntime JsRuntime { get; set; }
+
         [Parameter] public string Id { get; set; }
         [Parameter] public string BaseClass { get; set; } = "form-control overflow-hidden";
         [Parameter] public string Class { get; set; }
@@ -36,6 +40,7 @@ namespace BlazorNumericTextBox
         [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
         [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
         [Parameter] public EventCallback NumberChanged { get; set; }
+        [Parameter] public Expression<Func<TItem>> ValueExpression { get; set; }
 
         private const string AlignToRight = "text-align:right;";
         private readonly string DecimalSeparator;
@@ -44,6 +49,7 @@ namespace BlazorNumericTextBox
         private string ActiveClass = "";
         private string ComputedStyle => AdditionalStyles + Style;
         private string AdditionalStyles = "";
+        private FieldIdentifier FieldIdentifier;
 
         private static Random Random = new Random();
 
@@ -138,6 +144,17 @@ namespace BlazorNumericTextBox
             }
         }
 
+        public override async Task SetParametersAsync(ParameterView parameters)
+        {
+            await base.SetParametersAsync(parameters);
+
+            if (EditContext != null)
+            {
+                FieldIdentifier = FieldIdentifier.Create(ValueExpression);
+                EditContext.OnValidationStateChanged += (sender, e) => StateHasChanged();
+            }
+        }
+
         private async Task HasGotFocus()
         {
             ValueBeforeFocus = Value;
@@ -210,6 +227,10 @@ namespace BlazorNumericTextBox
 
             if (!ValueBeforeFocus.Equals(Value))
             {
+                if (!string.IsNullOrEmpty(FieldIdentifier.FieldName))
+                {
+                    EditContext.NotifyFieldChanged(FieldIdentifier);
+                }
                 await NumberChanged.InvokeAsync(Value);
             }
 

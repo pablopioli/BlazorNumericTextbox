@@ -1,83 +1,23 @@
 ﻿@page "/"
 
-<div class="container-fluid">
-    <p>
-        Numeric
-    </p>
-    <p>
-        <NumericTextBox @bind-Value="Numeric" Format="###,##0.00"
-                        Style="max-width:15rem;"
-                        NumberChanged="NumericHasChanged"></NumericTextBox>
-    </p>
-    <p>
-        Numeric (not binded)
-    </p>
-    <p>
-        <DecimalTextBox Format="###,##0.00"
-                        Style="max-width:15rem;"
-                        @ref="NumericRef"></DecimalTextBox>
-    </p>
-    <p>
-        Money
-    </p>
-    <p>
-        <NumericTextBox @bind-value="Money" Format="C4" TItem="decimal"
-                        Style="max-width:15rem;"
-                        ConditionalFormatting="FormatMoney"
-                        SelectOnEntry="true"></NumericTextBox>
-    </p>
-    <p>
-        Integer
-    </p>
-    <p>
-        <IntegerTextBox @bind-Value="Integer" Style="max-width:15rem;"></IntegerTextBox>
-    </p>
-    <p>
-        <button class="btn btn-primary" @onclick="SetValueRef">Set value by reference</button>
-    </p>
-    <p>
-        <button class="btn btn-primary" @onclick="SetValueProp">Set value by updating value</button>
-    </p>
-    <p>
-        Numeric: @Numeric
-    </p>
-    <p>
-        Money: @Money
-    </p>
-    <p>
-        @((MarkupString)TimesChanged)
-    </p>
+<div class="mx-2 my-2">
+    <h2>BlazorNumericTextBox</h2>
+    <p>A numeric textBox for Blazor.</p>
+
+    <dl>
+        <dt>Basic sample</dt>
+        <dd>Showcase the most basic functionality. <a href="basic">View</a></dd>
+        <dt>Binding</dt>
+        <dd>Showcase binding functionality. <a href="binding">View</a></dd>
+        <dt>Dynamic formatting</dt>
+        <dd>Style the textbox based on the current value. <a href="dynamicformatting">View</a></dd>
+        <dt>Events</dt>
+        <dd>React when the user enters a value. <a href="events">View</a></dd>
+        <dt>Programmatic</dt>
+        <dd>Interact with the textbox with code. <a href="programmatic">View</a></dd>
+        <dt>Validation</dt>
+        <dd>Supports Blazor's form validation. <a href="validation">View</a></dd>
+    </dl>
+
+    <p>Project url: <a href="https://github.com/pablopioli/BlazorNumericTextbox">https://github.com/pablopioli/BlazorNumericTextbox</a></p>
 </div>
-
-@code
-{
-    decimal Numeric { get; set; }
-    decimal Money { get; set; } = -1340.77m;
-    int Integer { get; set; }
-
-    string TimesChanged = "";
-
-    BlazorNumericTextBox.NumericTextBox<decimal> NumericRef;
-
-    string FormatMoney(decimal value)
-    {
-        // Class to add to the tag
-        return value < 0 ? "text-danger" : "";
-    }
-
-    void NumericHasChanged()
-    {
-        TimesChanged += "<p>Changed on " + DateTime.Now + " to " + Numeric + "</p>";
-    }
-
-    async Task SetValueRef()
-    {
-        await NumericRef.SetValue(128.30m);
-    }
-
-    void SetValueProp()
-    {
-        Numeric = 4999;
-        Money = -4877.15m;
-    }
-}

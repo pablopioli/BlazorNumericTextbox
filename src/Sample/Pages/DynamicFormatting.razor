@@ -1,0 +1,29 @@
+﻿@page "/dynamicformatting"
+
+    <div class="container-fluid my-3">
+        <h1>
+            Dynamic formatting
+        </h1>
+        <p>
+            <b>Negative values in red + select on entry</b>
+        </p>
+        <p>
+            <DecimalTextBox ConditionalFormatting="FormatMoney"
+                            SelectOnEntry="true" Style="max-width:15rem;"></DecimalTextBox>
+        </p>
+        <p>
+            A regular input
+        </p>
+        <p>
+            <input class="form-control" />
+        </p>
+    </div>
+
+    @code
+{
+        string FormatMoney(decimal value)
+        {
+            // Class to add to the tag
+            return value < 0 ? "text-danger" : "";
+        }
+    }

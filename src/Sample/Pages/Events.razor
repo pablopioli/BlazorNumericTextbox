@@ -1,0 +1,35 @@
+﻿@page "/events"
+
+<div class="container-fluid my-3">
+    <h1>
+        Events
+    </h1>
+    <p>
+        Integer
+    </p>
+    <p>
+        <IntegerTextBox Style="max-width:15rem;" NumberChanged="NumericHasChanged" @ref="ElementRef"></IntegerTextBox>
+    </p>
+    <p>
+        A regular input
+    </p>
+    <p>
+        <input class="form-control" />
+    </p>
+
+    <p>
+        @((MarkupString)TimesChanged)
+    </p>
+</div>
+
+@code
+{
+    string TimesChanged = "";
+
+    IntegerTextBox ElementRef;
+
+    void NumericHasChanged()
+    {
+        TimesChanged += "<p>Changed on " + DateTime.Now + " to " + ElementRef.Value + "</p>";
+    }
+}
