@@ -6,28 +6,24 @@
     <RepositoryUrl>https://github.com/pablopioli/BlazorNumericTextbox</RepositoryUrl>
     <Description>A numeric textbox for Blazor</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Version>2.5.0</Version>
+    <Version>2.5.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="bundleconfig.json" />
+    <SupportedPlatform Include="browser" />
   </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.0" />
   </ItemGroup>
 
-
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="bundleconfig.json" />
     <None Include="wwwroot\numerictextbox.js" />
-    <None Include="wwwroot\numerictextbox.min.js" />
   </ItemGroup>
 
 </Project>

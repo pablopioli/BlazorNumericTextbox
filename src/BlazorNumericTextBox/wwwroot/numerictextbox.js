@@ -1,12 +1,12 @@
-﻿window.GetNumericTextBoxValue = (element) => {
+﻿export function GetNumericTextBoxValue(element) {
     return document.querySelector(element).innerHTML;
 }
 
-window.SetNumericTextBoxValue = (element, value) => {
+export function SetNumericTextBoxValue(element, value) {
     document.querySelector(element).innerHTML = value;
 }
 
-window.SelectNumericTextBoxContents = (id) => {
+export function SelectNumericTextBoxContents(id) {
     var cell = document.querySelector(id);
     var range, selection;
     if (document.body.createTextRange) {
@@ -22,7 +22,7 @@ window.SelectNumericTextBoxContents = (id) => {
     }
 }
 
-window.ConfigureNumericTextBox = (element, source, to, useEnterAsTab, selectOnEntry, maxLengthAsString) => {
+export function ConfigureNumericTextBox(element, source, to, useEnterAsTab, selectOnEntry, maxLengthAsString) {
     var maxLength = parseInt(maxLengthAsString);
 
     if (selectOnEntry) {
@@ -115,11 +115,11 @@ window.ConfigureNumericTextBox = (element, source, to, useEnterAsTab, selectOnEn
     });
 }
 
-function transformTypedCharacter(typedChar, source, to) {
+export function transformTypedCharacter(typedChar, source, to) {
     return typedChar == source ? to : typedChar;
 }
 
-function insertTextAtCursor(text) {
+export function insertTextAtCursor(text) {
     var sel, range, textNode;
     if (window.getSelection) {
         sel = window.getSelection();

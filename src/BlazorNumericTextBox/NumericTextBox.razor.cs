@@ -50,6 +50,7 @@ namespace BlazorNumericTextBox
         private string ComputedStyle => AdditionalStyles + Style;
         private string AdditionalStyles = "";
         private FieldIdentifier FieldIdentifier;
+        private IJSObjectReference JsModule;
 
         private static Random Random = new Random();
 
@@ -101,7 +102,7 @@ namespace BlazorNumericTextBox
                 StateHasChanged();
             }
 
-            await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -110,13 +111,15 @@ namespace BlazorNumericTextBox
 
             if (firstRender)
             {
+                JsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BlazorNumericTextBox/numerictextbox.js");
+
                 string toDecimalSeparator = "";
                 if (DecimalSeparator != ".")
                 {
                     toDecimalSeparator = DecimalSeparator;
                 }
 
-                await JsRuntime.InvokeVoidAsync("ConfigureNumericTextBox",
+                await JsModule.InvokeVoidAsync("ConfigureNumericTextBox",
                     new string[] {
                         "#" + Id,
                         ".",
@@ -127,7 +130,7 @@ namespace BlazorNumericTextBox
                     });
 
                 await SetVisibleValue(Value);
-                await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
 
                 needUpdating = true;
             }
@@ -139,7 +142,7 @@ namespace BlazorNumericTextBox
             if (needUpdating)
             {
                 await SetVisibleValue(Value);
-                await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
                 PreviousValue = Value;
             }
         }
@@ -163,17 +166,17 @@ namespace BlazorNumericTextBox
 
             decimal decValue = Convert.ToDecimal(Value);
             var value = decValue.ToString("G29", Culture.NumberFormat);
-            await JsRuntime.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
+            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
 
             if (decValue == 0)
             {
-                await JsRuntime.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
+                await JsModule.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
             }
         }
 
         private async Task HasLostFocus()
         {
-            var data = await JsRuntime.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
+            var data = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
 
             var cleaned = string.Join("",
                 data.Replace("(", "-").Where(x => char.IsDigit(x) ||
