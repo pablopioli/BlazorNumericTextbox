@@ -10,16 +10,10 @@ using System.Threading.Tasks;
 
 namespace BlazorNumericTextBox
 {
+
+
     public partial class NumericTextBox<TItem> : ComponentBase
     {
-        public static class Defaults
-        {
-            public static bool UseEnterAsTab { get; set; }
-            public static bool SelectOnEntry { get; set; }
-            public static int MaxLength { get; set; } = 12;
-            public static CultureInfo Culture { get; set; } = new CultureInfo("en-US");
-        }
-
         [CascadingParameter] EditContext EditContext { get; set; } = default;
         [Inject] IJSRuntime JsRuntime { get; set; }
 
@@ -27,15 +21,15 @@ namespace BlazorNumericTextBox
         [Parameter] public string BaseClass { get; set; } = "form-control overflow-hidden";
         [Parameter] public string Class { get; set; }
         [Parameter] public string Style { get; set; } = "";
-        [Parameter] public int MaxLength { get; set; } = Defaults.MaxLength;
+        [Parameter] public int MaxLength { get; set; } = NumericTextBoxDefaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
 
         [Parameter] public TItem PreviousValue { get; set; } = default(TItem);
         [Parameter] public TItem ValueBeforeFocus { get; set; } = default(TItem);
         [Parameter] public TItem Value { get; set; } = default(TItem);
 
-        [Parameter] public bool UseEnterAsTab { get; set; } = Defaults.UseEnterAsTab;
-        [Parameter] public bool SelectOnEntry { get; set; } = Defaults.SelectOnEntry;
+        [Parameter] public bool UseEnterAsTab { get; set; } = NumericTextBoxDefaults.UseEnterAsTab;
+        [Parameter] public bool SelectOnEntry { get; set; } = NumericTextBoxDefaults.SelectOnEntry;
         [Parameter] public CultureInfo Culture { get; set; }
         [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
         [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
@@ -70,7 +64,7 @@ namespace BlazorNumericTextBox
                 }
                 else
                 {
-                    Culture = Defaults.Culture;
+                    Culture = NumericTextBoxDefaults.Culture;
                 }
             }
 

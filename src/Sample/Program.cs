@@ -12,7 +12,7 @@ namespace Sample
     {
         public static async Task Main(string[] args)
         {
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("es-AR");
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.DefaultThreadCurrentCulture;
 
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
