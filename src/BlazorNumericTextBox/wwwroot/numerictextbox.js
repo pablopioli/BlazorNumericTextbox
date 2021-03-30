@@ -56,14 +56,21 @@ export function ConfigureNumericTextBox(element, source, to, useEnterAsTab, sele
             return false;
         }
 
-        if (document.querySelector(element).innerHTML.length === maxLength) {
+        // Workaround for Firefox
+        var html = document.querySelector(element).innerHTML;
+        if (html == "<br>") {
+            document.querySelector(element).innerHTML = "";
+            html = "";
+        }
+
+        if (html.length === maxLength) {
             e.preventDefault();
         }
 
         if (to !== "") {
             var transformedChar = transformTypedCharacter(e.key, source, to);
             if (transformedChar != e.key) {
-                if (document.querySelector(element).innerHTML.length !== maxLength) {
+                if (html.length !== maxLength) {
                     insertTextAtCursor(transformedChar);
                 }
 
