@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -35,6 +36,11 @@ namespace BlazorNumericTextBox
         [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
         [Parameter] public EventCallback NumberChanged { get; set; }
         [Parameter] public Expression<Func<TItem>> ValueExpression { get; set; }
+
+        [Parameter] public Action<NumericTextBox<TItem>> OnFocus { get; set; }
+        [Parameter] public Action<NumericTextBox<TItem>> OnBlur { get; set; }
+
+        [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
 
         private const string AlignToRight = "text-align:right;";
         private readonly string DecimalSeparator;
@@ -166,6 +172,11 @@ namespace BlazorNumericTextBox
             {
                 await JsModule.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
             }
+
+            if (OnFocus != null)
+            {
+                OnFocus.Invoke(this);
+            }
         }
 
         private async Task HasLostFocus()
@@ -232,6 +243,11 @@ namespace BlazorNumericTextBox
             }
 
             AdditionalStyles = AlignToRight;
+
+            if (OnBlur != null)
+            {
+                OnBlur.Invoke(this);
+            }
         }
 
         private string ComputeClass(string additionalFormatting = "")
