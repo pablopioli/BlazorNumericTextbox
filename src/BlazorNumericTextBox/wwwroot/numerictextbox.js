@@ -22,11 +22,11 @@ export function SelectNumericTextBoxContents(id) {
     }
 }
 
-export function ConfigureNumericTextBox(element, source, to, useEnterAsTab, selectOnEntry, maxLengthAsString) {
+export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxLengthAsString) {
     var maxLength = parseInt(maxLengthAsString);
 
     if (selectOnEntry) {
-        $(element).on('focus', function () {
+        document.querySelector(element).addEventListener('focus', function () {
             var cell = this;
             var range, selection;
             if (document.body.createTextRange) {
@@ -44,18 +44,6 @@ export function ConfigureNumericTextBox(element, source, to, useEnterAsTab, sele
     }
 
     document.querySelector(element).addEventListener("keypress", function (e) {
-        if (e.key == "Enter") {
-            if (useEnterAsTab) {
-                var fields = $(this).parents('form:eq(0),body:visible').find('button, input, textarea, select, [contenteditable]').filter(function () { return !this.disabled; });
-                var index = fields.index(this);
-                if (index > -1 && (index + 1) < fields.length) {
-                    fields.eq(index + 1).focus();
-                }
-            }
-            e.preventDefault();
-            return false;
-        }
-
         // Workaround for Firefox
         var html = document.querySelector(element).innerHTML;
         if (html == "<br>") {

@@ -29,7 +29,6 @@ namespace BlazorNumericTextBox
         [Parameter] public TItem ValueBeforeFocus { get; set; } = default(TItem);
         [Parameter] public TItem Value { get; set; } = default(TItem);
 
-        [Parameter] public bool UseEnterAsTab { get; set; } = NumericTextBoxDefaults.UseEnterAsTab;
         [Parameter] public bool SelectOnEntry { get; set; } = NumericTextBoxDefaults.SelectOnEntry;
         [Parameter] public CultureInfo Culture { get; set; }
         [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
@@ -37,8 +36,8 @@ namespace BlazorNumericTextBox
         [Parameter] public EventCallback NumberChanged { get; set; }
         [Parameter] public Expression<Func<TItem>> ValueExpression { get; set; }
 
-        [Parameter] public Action<NumericTextBox<TItem>> OnFocus { get; set; }
-        [Parameter] public Action<NumericTextBox<TItem>> OnBlur { get; set; }
+        [Parameter] public Func<Task> OnFocus { get; set; }
+        [Parameter] public Func<Task> OnBlur { get; set; }
 
         [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
 
@@ -124,7 +123,6 @@ namespace BlazorNumericTextBox
                         "#" + Id,
                         ".",
                         toDecimalSeparator,
-                        UseEnterAsTab ? "true" : "",
                         SelectOnEntry ? "true" : "",
                         MaxLength.ToString()
                     });
@@ -175,7 +173,7 @@ namespace BlazorNumericTextBox
 
             if (OnFocus != null)
             {
-                OnFocus.Invoke(this);
+                await OnFocus.Invoke();
             }
         }
 
@@ -246,7 +244,7 @@ namespace BlazorNumericTextBox
 
             if (OnBlur != null)
             {
-                OnBlur.Invoke(this);
+                await OnBlur.Invoke();
             }
         }
 
