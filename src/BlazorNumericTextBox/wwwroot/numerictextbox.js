@@ -22,7 +22,7 @@ export function SelectNumericTextBoxContents(id) {
     }
 }
 
-export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxLengthAsString) {
+export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxLengthAsString, keyPressCustomFunction) {
     var maxLength = parseInt(maxLengthAsString);
 
     if (selectOnEntry) {
@@ -76,6 +76,11 @@ export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxL
         }
 
         e.preventDefault();
+
+        if (keyPressCustomFunction) {
+            window[keyPressCustomFunction].apply(null, [e]);
+        }
+
         return false;
     });
 

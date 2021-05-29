@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace BlazorNumericTextBox
 {
-
-
     public partial class NumericTextBox<TItem> : ComponentBase
     {
         [CascadingParameter] EditContext EditContext { get; set; } = default;
@@ -24,11 +22,11 @@ namespace BlazorNumericTextBox
         [Parameter] public string Style { get; set; } = "";
         [Parameter] public int MaxLength { get; set; } = NumericTextBoxDefaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
+        [Parameter] public string KeyPressCustomFunction { get; set; } = "";
 
         [Parameter] public TItem PreviousValue { get; set; } = default(TItem);
         [Parameter] public TItem ValueBeforeFocus { get; set; } = default(TItem);
         [Parameter] public TItem Value { get; set; } = default(TItem);
-
         [Parameter] public bool SelectOnEntry { get; set; } = NumericTextBoxDefaults.SelectOnEntry;
         [Parameter] public CultureInfo Culture { get; set; }
         [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
@@ -76,7 +74,7 @@ namespace BlazorNumericTextBox
             DecimalSeparator = Culture.NumberFormat.NumberDecimalSeparator;
         }
 
-        private async Task SetVisibleValue(TItem value)
+        private void SetVisibleValue(TItem value)
         {
             if (string.IsNullOrEmpty(Format))
             {
@@ -93,15 +91,7 @@ namespace BlazorNumericTextBox
                 additionalFormatting = ConditionalFormatting(value);
             }
 
-            var prevClass = ActiveClass;
             ActiveClass = ComputeClass(additionalFormatting);
-
-            if (prevClass != ActiveClass)
-            {
-                StateHasChanged();
-            }
-
-            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -124,10 +114,11 @@ namespace BlazorNumericTextBox
                         ".",
                         toDecimalSeparator,
                         SelectOnEntry ? "true" : "",
-                        MaxLength.ToString()
+                        MaxLength.ToString(),
+                        KeyPressCustomFunction
                     });
 
-                await SetVisibleValue(Value);
+                SetVisibleValue(Value);
                 await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
 
                 needUpdating = true;
@@ -139,7 +130,7 @@ namespace BlazorNumericTextBox
 
             if (needUpdating)
             {
-                await SetVisibleValue(Value);
+                SetVisibleValue(Value);
                 await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
                 PreviousValue = Value;
             }
@@ -148,6 +139,8 @@ namespace BlazorNumericTextBox
         public override async Task SetParametersAsync(ParameterView parameters)
         {
             await base.SetParametersAsync(parameters);
+
+            ActiveClass = ComputeClass();
 
             if (EditContext != null)
             {
@@ -180,7 +173,6 @@ namespace BlazorNumericTextBox
         private async Task HasLostFocus()
         {
             var data = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
-
             var cleaned = string.Join("",
                 data.Replace("(", "-").Where(x => char.IsDigit(x) ||
                                              x == '-' ||
@@ -227,8 +219,7 @@ namespace BlazorNumericTextBox
                 Value = (TItem)Convert.ChangeType(valueAsDecimal, typeof(TItem));
             }
 
-            await SetVisibleValue(Value);
-
+            SetVisibleValue(Value);
             await ValueChanged.InvokeAsync(Value);
 
             if (!ValueBeforeFocus.Equals(Value))
@@ -271,7 +262,8 @@ namespace BlazorNumericTextBox
         {
             Value = value;
             PreviousValue = value;
-            await SetVisibleValue(value);
+            SetVisibleValue(value);
+            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
         }
     }
 }

@@ -1,33 +1,33 @@
 ﻿@page "/binding"
 
-    <div class="container-fluid my-3">
-        <h1>
-            Binding
-        </h1>
+<div class="container-fluid my-3">
+    <h1>
+        Binding
+    </h1>
 
-        <p>
-            <b>Integer</b>
-        </p>
-        <p>
-            <IntegerTextBox @bind-Value="Integer" Style="max-width:15rem;"></IntegerTextBox>
-        </p>
-        <p>
-            Binded value: @Integer
-        </p>
+    <p>
+        <b>Integer</b>
+    </p>
+    <p>
+        <IntegerTextBox @bind-Value="Integer" Style="max-width:15rem;"></IntegerTextBox>
+    </p>
+    <p>
+        Binded value: @Integer
+    </p>
 
-        <p>
-            <b>Formatted with two decimals</b>
-        </p>
-        <p>
-            <DecimalTextBox @bind-Value="Money" Format="###,##0.00" Style="max-width:15rem;"></DecimalTextBox>
-        </p>
-        <p>
-            Binded value: @Money
-        </p>
-    </div>
+    <p>
+        <b>Formatted with two decimals</b>
+    </p>
+    <p>
+        <DecimalTextBox @bind-Value="Money" Format="###,##0.00" Style="max-width:15rem;"></DecimalTextBox>
+    </p>
+    <p>
+        Binded value: @Money
+    </p>
+</div>
 
 @code
 {
     int Integer { get; set; }
     decimal Money { get; set; } = -1340.77m;
- }
+}
