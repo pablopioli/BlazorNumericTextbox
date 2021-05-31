@@ -6,7 +6,7 @@
     <RepositoryUrl>https://github.com/pablopioli/BlazorNumericTextbox</RepositoryUrl>
     <Description>A numeric textbox for Blazor</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Version>2.9</Version>
+    <Version>2.9.5</Version>
   </PropertyGroup>
 
   <ItemGroup>

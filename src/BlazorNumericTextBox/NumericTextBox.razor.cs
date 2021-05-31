@@ -74,7 +74,7 @@ namespace BlazorNumericTextBox
             DecimalSeparator = Culture.NumberFormat.NumberDecimalSeparator;
         }
 
-        private void SetVisibleValue(TItem value)
+        private async Task SetVisibleValue(TItem value)
         {
             if (string.IsNullOrEmpty(Format))
             {
@@ -92,6 +92,12 @@ namespace BlazorNumericTextBox
             }
 
             ActiveClass = ComputeClass(additionalFormatting);
+
+            var currentValue = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
+            if (currentValue != VisibleValue)
+            {
+                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+            }
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -118,9 +124,7 @@ namespace BlazorNumericTextBox
                         KeyPressCustomFunction
                     });
 
-                SetVisibleValue(Value);
-                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
-
+                await SetVisibleValue(Value);
                 needUpdating = true;
             }
             else
@@ -130,8 +134,7 @@ namespace BlazorNumericTextBox
 
             if (needUpdating)
             {
-                SetVisibleValue(Value);
-                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                await SetVisibleValue(Value);
                 PreviousValue = Value;
             }
         }
@@ -219,10 +222,13 @@ namespace BlazorNumericTextBox
                 Value = (TItem)Convert.ChangeType(valueAsDecimal, typeof(TItem));
             }
 
-            SetVisibleValue(Value);
+            // Do not remove. Problems in browser events and Blazor changes the value of the Value property
+            var value = Value;
+            await SetVisibleValue(Value);
+            Value = value;
             await ValueChanged.InvokeAsync(Value);
 
-            if (!ValueBeforeFocus.Equals(Value))
+            if (!PreviousValue.Equals(Value))
             {
                 if (!string.IsNullOrEmpty(FieldIdentifier.FieldName))
                 {
@@ -262,8 +268,7 @@ namespace BlazorNumericTextBox
         {
             Value = value;
             PreviousValue = value;
-            SetVisibleValue(value);
-            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+            await SetVisibleValue(value);
         }
     }
 }
