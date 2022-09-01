@@ -1,9 +1,17 @@
 ﻿export function GetNumericTextBoxValue(element) {
-    return document.querySelector(element).innerHTML;
+    try {
+        return document.querySelector(element).innerHTML;
+    }
+    catch (error) {
+        return "";
+    }
 }
 
 export function SetNumericTextBoxValue(element, value) {
-    document.querySelector(element).innerHTML = value;
+    try {
+        document.querySelector(element).innerHTML = value;
+    }
+    catch (error) { }
 }
 
 export function SelectNumericTextBoxContents(id) {
@@ -43,7 +51,14 @@ export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxL
         });
     }
 
+    var keypadPointPressed = false;
+
+    document.querySelector(element).addEventListener("keydown", function (e) {
+        keypadPointPressed = e.code == "NumpadDecimal";
+    });
+
     document.querySelector(element).addEventListener("keypress", function (e) {
+
         // Workaround for Firefox
         var html = document.querySelector(element).innerHTML;
         if (html == "<br>") {
@@ -55,19 +70,17 @@ export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxL
             e.preventDefault();
         }
 
-        if (to !== "") {
-            var transformedChar = transformTypedCharacter(e.key, source, to);
-            if (transformedChar != e.key) {
-                if (html.length !== maxLength) {
-                    insertTextAtCursor(transformedChar);
-                }
-
-                e.preventDefault();
-                return false;
+        if (keypadPointPressed && to !== "") {
+            if (html.length !== maxLength) {
+                insertTextAtCursor(to);
             }
+
+            e.preventDefault();
+
+            return false;
         }
 
-        if (e.key === "-" || e.key == ".") {
+        if (e.key === "-" || e.key == "." || e.key == ",") {
             return true;
         }
 
@@ -113,10 +126,6 @@ export function ConfigureNumericTextBox(element, source, to, selectOnEntry, maxL
             e.preventDefault();
         }
     });
-}
-
-export function transformTypedCharacter(typedChar, source, to) {
-    return typedChar == source ? to : typedChar;
 }
 
 export function insertTextAtCursor(text) {

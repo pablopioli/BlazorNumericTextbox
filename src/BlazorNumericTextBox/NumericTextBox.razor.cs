@@ -1,55 +1,49 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BlazorNumericTextBox
 {
     public partial class NumericTextBox<TItem> : ComponentBase
     {
-        [CascadingParameter] EditContext EditContext { get; set; } = default;
-        [Inject] IJSRuntime JsRuntime { get; set; }
+        [CascadingParameter] EditContext? EditContext { get; set; } = default;
+        [Inject] IJSRuntime JsRuntime { get; set; } = null!;
 
         [Parameter] public string Id { get; set; }
         [Parameter] public string BaseClass { get; set; } = "form-control overflow-hidden";
-        [Parameter] public string Class { get; set; }
+        [Parameter] public string Class { get; set; } = "";
         [Parameter] public string Style { get; set; } = "";
         [Parameter] public int MaxLength { get; set; } = NumericTextBoxDefaults.MaxLength;
         [Parameter] public string Format { get; set; } = "";
         [Parameter] public string KeyPressCustomFunction { get; set; } = "";
-
-        [Parameter] public TItem PreviousValue { get; set; } = default(TItem);
-        [Parameter] public TItem ValueBeforeFocus { get; set; } = default(TItem);
-        [Parameter] public TItem Value { get; set; } = default(TItem);
+        [Parameter] public TItem? PreviousValue { get; set; } = default;
+        [Parameter] public TItem? ValueBeforeFocus { get; set; } = default;
+        [Parameter] public TItem? Value { get; set; } = default;
         [Parameter] public bool SelectOnEntry { get; set; } = NumericTextBoxDefaults.SelectOnEntry;
-        [Parameter] public CultureInfo Culture { get; set; }
-        [Parameter] public Func<TItem, string> ConditionalFormatting { get; set; }
+        [Parameter] public CultureInfo? Culture { get; set; }
+        [Parameter] public Func<TItem, string>? ConditionalFormatting { get; set; }
         [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
         [Parameter] public EventCallback NumberChanged { get; set; }
-        [Parameter] public Expression<Func<TItem>> ValueExpression { get; set; }
+        [Parameter] public Expression<Func<TItem>>? ValueExpression { get; set; }
+        [Parameter] public Func<Task>? OnFocus { get; set; }
+        [Parameter] public Func<Task>? OnBlur { get; set; }
+        [Parameter] public string CustomDecimalSeparator { get; set; } = "";
 
-        [Parameter] public Func<Task> OnFocus { get; set; }
-        [Parameter] public Func<Task> OnBlur { get; set; }
-
-        [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object> AdditionalAttributes { get; set; }
+        [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
         private const string AlignToRight = "text-align:right;";
-        private readonly string DecimalSeparator;
 
         private string VisibleValue = "";
         private string ActiveClass = "";
         private string ComputedStyle => AdditionalStyles + Style;
         private string AdditionalStyles = "";
         private FieldIdentifier FieldIdentifier;
-        private IJSObjectReference JsModule;
+        private IJSObjectReference? JsModule;
 
-        private static Random Random = new Random();
+        private static readonly Random Random = new();
 
         public NumericTextBox()
         {
@@ -58,31 +52,35 @@ namespace BlazorNumericTextBox
 
             ActiveClass = ComputeClass();
             AdditionalStyles = AlignToRight;
+        }
 
-            if (Culture == null)
+        private CultureInfo GetCulture()
+        {
+            if (Culture != null)
             {
-                if (CultureInfo.DefaultThreadCurrentUICulture != null)
-                {
-                    Culture = CultureInfo.DefaultThreadCurrentUICulture;
-                }
-                else
-                {
-                    Culture = NumericTextBoxDefaults.Culture;
-                }
+                return Culture;
             }
-
-            DecimalSeparator = Culture.NumberFormat.NumberDecimalSeparator;
+            else if (CultureInfo.DefaultThreadCurrentUICulture != null)
+            {
+                return CultureInfo.DefaultThreadCurrentUICulture;
+            }
+            else
+            {
+                return NumericTextBoxDefaults.Culture;
+            }
         }
 
         private async Task SetVisibleValue(TItem value)
         {
+            var numberFormat = GetCulture().NumberFormat;
+
             if (string.IsNullOrEmpty(Format))
             {
-                VisibleValue = value.ToString();
+                VisibleValue = Convert.ToDecimal(value).ToString("G", numberFormat) ?? "";
             }
             else
             {
-                VisibleValue = Convert.ToDecimal(value).ToString(Format);
+                VisibleValue = Convert.ToDecimal(value).ToString(Format, numberFormat);
             }
 
             var additionalFormatting = string.Empty;
@@ -93,10 +91,13 @@ namespace BlazorNumericTextBox
 
             ActiveClass = ComputeClass(additionalFormatting);
 
-            var currentValue = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
-            if (currentValue != VisibleValue)
+            if (JsModule != null)
             {
-                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                var currentValue = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
+                if (currentValue != VisibleValue)
+                {
+                    await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
+                }
             }
         }
 
@@ -108,10 +109,11 @@ namespace BlazorNumericTextBox
             {
                 JsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BlazorNumericTextBox/numerictextbox.js");
 
-                string toDecimalSeparator = "";
-                if (DecimalSeparator != ".")
+                var toDecimalSeparator = NumericTextBoxDefaults.CustomDecimalSeparator;
+
+                if (!string.IsNullOrEmpty(CustomDecimalSeparator))
                 {
-                    toDecimalSeparator = DecimalSeparator;
+                    toDecimalSeparator = CustomDecimalSeparator;
                 }
 
                 await JsModule.InvokeVoidAsync("ConfigureNumericTextBox",
@@ -124,17 +126,32 @@ namespace BlazorNumericTextBox
                         KeyPressCustomFunction
                     });
 
-                await SetVisibleValue(Value);
+                if (Value != null)
+                {
+                    await SetVisibleValue(Value);
+                }
+
                 needUpdating = true;
             }
             else
             {
-                needUpdating = !PreviousValue.Equals(Value);
+                if (PreviousValue != null)
+                {
+                    needUpdating = !PreviousValue.Equals(Value);
+                }
+                else
+                {
+                    needUpdating = true;
+                }
             }
 
             if (needUpdating)
             {
-                await SetVisibleValue(Value);
+                if (Value != null)
+                {
+                    await SetVisibleValue(Value);
+                }
+
                 PreviousValue = Value;
             }
         }
@@ -145,7 +162,7 @@ namespace BlazorNumericTextBox
 
             ActiveClass = ComputeClass();
 
-            if (EditContext != null)
+            if (EditContext != null && ValueExpression != null)
             {
                 FieldIdentifier = FieldIdentifier.Create(ValueExpression);
                 EditContext.OnValidationStateChanged += (sender, e) => StateHasChanged();
@@ -159,10 +176,14 @@ namespace BlazorNumericTextBox
             AdditionalStyles = "";
 
             decimal decValue = Convert.ToDecimal(Value);
-            var value = decValue.ToString("G29", Culture.NumberFormat);
-            await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
+            var value = decValue.ToString("G29", GetCulture().NumberFormat);
 
-            if (decValue == 0)
+            if (JsModule != null)
+            {
+                await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, value });
+            }
+
+            if (decValue == 0 && JsModule != null)
             {
                 await JsModule.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
             }
@@ -175,43 +196,52 @@ namespace BlazorNumericTextBox
 
         private async Task HasLostFocus()
         {
-            var data = await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
+            var culture = GetCulture();
+            var decimalSeparator = culture.NumberFormat.NumberDecimalSeparator;
+            var numberFormat = culture.NumberFormat;
+
+            var data = JsModule == null ? "" : await JsModule.InvokeAsync<string>("GetNumericTextBoxValue", new string[] { "#" + Id });
+
             var cleaned = string.Join("",
                 data.Replace("(", "-").Where(x => char.IsDigit(x) ||
                                              x == '-' ||
-                                             x.ToString() == DecimalSeparator).ToArray());
-            var parsed = decimal.TryParse(cleaned, NumberStyles.Any, Culture.NumberFormat, out var valueAsDecimal);
+                                             x.ToString() == decimalSeparator).ToArray());
+
+            var parsed = decimal.TryParse(cleaned, NumberStyles.Any, numberFormat, out var valueAsDecimal);
+
             if (!parsed)
             {
                 if (string.IsNullOrEmpty(Format))
                 {
-                    VisibleValue = "";
+                    VisibleValue = 0.ToString("G", numberFormat);
                 }
                 else
                 {
-                    VisibleValue = 0.ToString(Format);
+                    VisibleValue = 0.ToString(Format, numberFormat);
                 }
             }
             else
             {
+                Console.WriteLine(valueAsDecimal);
                 if (string.IsNullOrEmpty(Format))
                 {
-                    VisibleValue = cleaned;
+                    VisibleValue = valueAsDecimal.ToString("G", numberFormat);
                 }
                 else
                 {
-                    VisibleValue = valueAsDecimal.ToString(Format);
+                    VisibleValue = valueAsDecimal.ToString(Format, numberFormat);
                 }
+                Console.WriteLine(VisibleValue);
             }
 
-            // Negative monetary values a represented with parenthesis
+            // Negative monetary values are represented with parenthesis
             cleaned = string.Join("",
                 VisibleValue.Replace("(", "-")
                             .Where(x => char.IsDigit(x) ||
                                         x == '-' ||
-                                        x.ToString() == DecimalSeparator).ToArray());
+                                        x.ToString() == decimalSeparator).ToArray());
 
-            parsed = decimal.TryParse(cleaned, NumberStyles.Any, Culture.NumberFormat, out var roundedValue);
+            parsed = decimal.TryParse(cleaned, NumberStyles.Any, numberFormat, out var roundedValue);
 
             if (parsed)
             {
@@ -222,17 +252,18 @@ namespace BlazorNumericTextBox
                 Value = (TItem)Convert.ChangeType(valueAsDecimal, typeof(TItem));
             }
 
-            // Do not remove. Problems in browser events and Blazor changes the value of the Value property
+            // Do not remove
+            // Solves a problem in how Blazor changes the value of the Value property responding to browser events
             var value = Value;
             await SetVisibleValue(Value);
             Value = value;
             await ValueChanged.InvokeAsync(Value);
 
-            if (!PreviousValue.Equals(Value))
+            if (PreviousValue != null && !PreviousValue.Equals(Value))
             {
                 if (!string.IsNullOrEmpty(FieldIdentifier.FieldName))
                 {
-                    EditContext.NotifyFieldChanged(FieldIdentifier);
+                    EditContext?.NotifyFieldChanged(FieldIdentifier);
                 }
                 await NumberChanged.InvokeAsync(Value);
             }

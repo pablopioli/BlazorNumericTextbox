@@ -1,0 +1,26 @@
+﻿@page "/customculture"
+@using System.Globalization
+
+    <div class="container-fluid my-3">
+        <h1>
+            Custom Culture
+        </h1>
+        <p>
+            en-US
+        </p>
+        <p>
+        <DecimalTextBox Style="max-width:15rem;" Format="C2" Culture="@EnUs"></DecimalTextBox>
+        </p>
+        <p>
+            es-ES
+        </p>
+        <p>
+        <DecimalTextBox Style="max-width:15rem;" Format="C2" Culture="@EsEs" CustomDecimalSeparator=","></DecimalTextBox>
+        </p>
+    </div>
+
+@code
+{
+    public CultureInfo EnUs = new CultureInfo("en-US") { NumberFormat = { CurrencySymbol = "$" } };
+    public CultureInfo EsEs = new CultureInfo("es-ES") { NumberFormat = { CurrencySymbol = "€" } };
+}
