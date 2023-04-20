@@ -221,8 +221,7 @@ namespace BlazorNumericTextBox
                 }
             }
             else
-            {
-                Console.WriteLine(valueAsDecimal);
+            {                
                 if (string.IsNullOrEmpty(Format))
                 {
                     VisibleValue = valueAsDecimal.ToString("G", numberFormat);
@@ -230,8 +229,7 @@ namespace BlazorNumericTextBox
                 else
                 {
                     VisibleValue = valueAsDecimal.ToString(Format, numberFormat);
-                }
-                Console.WriteLine(VisibleValue);
+                }             
             }
 
             // Negative monetary values are represented with parenthesis
