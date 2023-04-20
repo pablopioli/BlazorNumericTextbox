@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using PeterLeslieMorris.Blazor.Validation;
+using Morris.Blazor.Validation;
 using System;
 using System.Globalization;
 using System.Net.Http;

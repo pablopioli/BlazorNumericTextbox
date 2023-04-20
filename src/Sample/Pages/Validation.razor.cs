@@ -1,13 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components.Forms;
-using PeterLeslieMorris.Blazor.Validation.Extensions;
-using System;
+using Morris.Blazor.Validation.Extensions;
 
 namespace Sample.Pages
 {
     public partial class Validation
     {
-        InputModel Model = new InputModel();
+        readonly InputModel Model = new();
         string ValidationResult = "Still not validated";
 
         void FormSubmitted(EditContext editContext)
