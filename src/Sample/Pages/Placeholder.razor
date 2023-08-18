@@ -1,0 +1,40 @@
+﻿@page "/placeholder"
+
+<div class="container-fluid my-3">
+    <h1>
+        Placeholder
+    </h1>
+
+    <p>
+        <b>Integer</b>
+    </p>
+    <p>
+        <IntegerTextBox @bind-Value="Integer" Style="max-width:15rem;" PlaceHolder="Required"></IntegerTextBox>
+    </p>
+    <p>
+        Binded value: @Integer
+    </p>
+
+    <p>
+        <b>Formatted with two decimals</b>
+    </p>
+    <p>
+        <DecimalTextBox @bind-Value="Money" Format="###,##0.00" Style="max-width:15rem;" PlaceHolder="Required"></DecimalTextBox>
+    </p>
+    <p>
+        Binded value: @Money
+    </p>
+
+    <p>
+        <input placeholder="Required" class="form-control" style="max-width:30rem;" />
+    </p>
+    <p>
+        Regular TextBox
+    </p>
+</div>
+
+@code
+{
+    int Integer { get; set; }
+    decimal Money { get; set; } = -1340.77m;
+}

@@ -14,6 +14,13 @@ export function SetNumericTextBoxValue(element, value) {
     catch (error) { }
 }
 
+export function SetNumericTextBoxClass(element, value) {
+    try {
+        document.getElementById(element).className = value;
+    }
+    catch (error) { }
+}
+
 export function SelectNumericTextBoxContents(id) {
     var cell = document.querySelector(id);
     var range, selection;

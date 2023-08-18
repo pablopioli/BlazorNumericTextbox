@@ -31,13 +31,14 @@ namespace BlazorNumericTextBox
         [Parameter] public Func<Task>? OnFocus { get; set; }
         [Parameter] public Func<Task>? OnBlur { get; set; }
         [Parameter] public string CustomDecimalSeparator { get; set; } = "";
+        [Parameter] public string PlaceHolder { get; set; } = "";
+        [Parameter] public string PlaceHolderClass { get; set; } = "text-muted";
 
         [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
         private const string AlignToRight = "text-align:right;";
 
         private string VisibleValue = "";
-        private string ActiveClass = "";
         private string ComputedStyle => AdditionalStyles + Style;
         private string AdditionalStyles = "";
         private FieldIdentifier FieldIdentifier;
@@ -49,8 +50,6 @@ namespace BlazorNumericTextBox
         {
             const string chars = "abcdefghijklmnopqrstuvwxyz";
             Id = new string(Enumerable.Repeat(chars, 12).Select(s => s[Random.Next(s.Length)]).ToArray());
-
-            ActiveClass = ComputeClass();
             AdditionalStyles = AlignToRight;
         }
 
@@ -72,24 +71,24 @@ namespace BlazorNumericTextBox
 
         private async Task SetVisibleValue(TItem value)
         {
-            var numberFormat = GetCulture().NumberFormat;
+            var decimalValue = Convert.ToDecimal(value);
 
-            if (string.IsNullOrEmpty(Format))
+            if (decimalValue == 0 && !string.IsNullOrWhiteSpace(PlaceHolder))
             {
-                VisibleValue = Convert.ToDecimal(value).ToString("G", numberFormat) ?? "";
+                VisibleValue = PlaceHolder;
             }
             else
             {
-                VisibleValue = Convert.ToDecimal(value).ToString(Format, numberFormat);
+                var numberFormat = GetCulture().NumberFormat;
+                if (string.IsNullOrEmpty(Format))
+                {
+                    VisibleValue = decimalValue.ToString("G", numberFormat) ?? "";
+                }
+                else
+                {
+                    VisibleValue = decimalValue.ToString(Format, numberFormat);
+                }
             }
-
-            var additionalFormatting = string.Empty;
-            if (ConditionalFormatting != null)
-            {
-                additionalFormatting = ConditionalFormatting(value);
-            }
-
-            ActiveClass = ComputeClass(additionalFormatting);
 
             if (JsModule != null)
             {
@@ -99,6 +98,8 @@ namespace BlazorNumericTextBox
                     await JsModule.InvokeVoidAsync("SetNumericTextBoxValue", new string[] { "#" + Id, VisibleValue });
                 }
             }
+
+            await UpdateCssClass(false);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -154,25 +155,49 @@ namespace BlazorNumericTextBox
 
                 PreviousValue = Value;
             }
+
+            if (firstRender || needUpdating)
+            {
+                await UpdateCssClass(false);
+            }
+        }
+
+        private async Task UpdateCssClass(bool disablePlaceholder)
+        {
+            if (Value != null)
+            {
+                var additionalFormatting = string.Empty;
+                if (ConditionalFormatting != null)
+                {
+                    additionalFormatting = ConditionalFormatting(Value);
+                }
+
+                var usePlaceHolder = !disablePlaceholder && (Convert.ToDecimal(Value) == 0 && !string.IsNullOrWhiteSpace(PlaceHolder));
+                var activeClass = ComputeClass(additionalFormatting) + (usePlaceHolder ? $" {PlaceHolderClass}" : "");
+
+                if (JsModule != null)
+                {
+                    await JsModule.InvokeVoidAsync("SetNumericTextBoxClass", new string[] { Id, activeClass });
+                }
+            }
         }
 
         public override async Task SetParametersAsync(ParameterView parameters)
         {
             await base.SetParametersAsync(parameters);
 
-            ActiveClass = ComputeClass();
-
             if (EditContext != null && ValueExpression != null)
             {
                 FieldIdentifier = FieldIdentifier.Create(ValueExpression);
                 EditContext.OnValidationStateChanged += (sender, e) => StateHasChanged();
             }
+
+            await UpdateCssClass(false);
         }
 
         private async Task HasGotFocus()
         {
             ValueBeforeFocus = Value;
-            ActiveClass = ComputeClass();
             AdditionalStyles = "";
 
             decimal decValue = Convert.ToDecimal(Value);
@@ -187,6 +212,8 @@ namespace BlazorNumericTextBox
             {
                 await JsModule.InvokeVoidAsync("SelectNumericTextBoxContents", new string[] { "#" + Id, VisibleValue });
             }
+
+            await UpdateCssClass(true);
 
             if (OnFocus != null)
             {
@@ -221,7 +248,7 @@ namespace BlazorNumericTextBox
                 }
             }
             else
-            {                
+            {
                 if (string.IsNullOrEmpty(Format))
                 {
                     VisibleValue = valueAsDecimal.ToString("G", numberFormat);
@@ -229,7 +256,7 @@ namespace BlazorNumericTextBox
                 else
                 {
                     VisibleValue = valueAsDecimal.ToString(Format, numberFormat);
-                }             
+                }
             }
 
             // Negative monetary values are represented with parenthesis
@@ -267,6 +294,7 @@ namespace BlazorNumericTextBox
             }
 
             AdditionalStyles = AlignToRight;
+            await UpdateCssClass(false);
 
             if (OnBlur != null)
             {

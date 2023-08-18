@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Components.Forms;
-using Morris.Blazor.Validation.Extensions;
 
 namespace Sample.Pages
 {
@@ -11,7 +10,7 @@ namespace Sample.Pages
 
         void FormSubmitted(EditContext editContext)
         {
-            var formIsValid = editContext.ValidateObjectTree();
+            var formIsValid = editContext.Validate();
             ValidationResult = formIsValid ? "Valid" : "Invalid";
         }
 
