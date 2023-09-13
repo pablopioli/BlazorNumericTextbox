@@ -9,10 +9,12 @@ namespace BlazorNumericTextBox
 {
     public partial class NumericTextBox<TItem> : ComponentBase
     {
+        const string chars = "abcdefghijklmnopqrstuvwxyz";
+
         [CascadingParameter] EditContext? EditContext { get; set; } = default;
         [Inject] IJSRuntime JsRuntime { get; set; } = null!;
 
-        [Parameter] public string Id { get; set; }
+        [Parameter] public string Id { get; set; } = new string(Enumerable.Repeat(chars, 12).Select(s => s[Random.Next(s.Length)]).ToArray());
         [Parameter] public string BaseClass { get; set; } = "form-control overflow-hidden";
         [Parameter] public string Class { get; set; } = "";
         [Parameter] public string Style { get; set; } = "";
@@ -40,18 +42,11 @@ namespace BlazorNumericTextBox
 
         private string VisibleValue = "";
         private string ComputedStyle => AdditionalStyles + Style;
-        private string AdditionalStyles = "";
+        private string AdditionalStyles = AlignToRight;
         private FieldIdentifier FieldIdentifier;
         private IJSObjectReference? JsModule;
 
         private static readonly Random Random = new();
-
-        public NumericTextBox()
-        {
-            const string chars = "abcdefghijklmnopqrstuvwxyz";
-            Id = new string(Enumerable.Repeat(chars, 12).Select(s => s[Random.Next(s.Length)]).ToArray());
-            AdditionalStyles = AlignToRight;
-        }
 
         private CultureInfo GetCulture()
         {
@@ -117,6 +112,11 @@ namespace BlazorNumericTextBox
                     toDecimalSeparator = CustomDecimalSeparator;
                 }
 
+                if (Value != null)
+                {
+                    await SetVisibleValue(Value);
+                }
+
                 await JsModule.InvokeVoidAsync("ConfigureNumericTextBox",
                     new string[] {
                         "#" + Id,
@@ -126,11 +126,6 @@ namespace BlazorNumericTextBox
                         MaxLength.ToString(),
                         KeyPressCustomFunction
                     });
-
-                if (Value != null)
-                {
-                    await SetVisibleValue(Value);
-                }
 
                 needUpdating = true;
             }
