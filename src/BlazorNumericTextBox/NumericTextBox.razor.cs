@@ -107,7 +107,7 @@ namespace BlazorNumericTextBox
 
                 var toDecimalSeparator = NumericTextBoxDefaults.CustomDecimalSeparator;
 
-                if (!string.IsNullOrEmpty(CustomDecimalSeparator))
+                if (string.IsNullOrWhiteSpace(toDecimalSeparator))
                 {
                     toDecimalSeparator = CustomDecimalSeparator;
                 }
